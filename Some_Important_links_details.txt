@@ -1,0 +1,94 @@
+MSSQL Database CI-CD prerequisites
+
+visual studio framework - download - DB project - SQL server dev tools
+MS build - msbuild.exe utility - to build DB project
+SQL package.exe - comparision, build DB, deploy. 
+
+
+Merrill Lynch
+SHUBH513681842
+Dhanbarse@2021
+
+GITHUB ID: 
+User ID: AmbrishVerma2023
+Github@2023
+
+ELK links: 
+https://www.elastic.co/guide/en/apm/agent/java/current/supported-technologies-details.html
+
+multilingual search: https://www.elastic.co/blog/multilingual-search-using-language-identification-in-elasticsearch
+
+https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu-transform.html
+
+language analyzer: https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html
+
+multiple fuzziness querry in elastic search : https://discuss.elastic.co/t/how-to-write-multiple-fuzziness-query-in-elastic/176562
+
+some data management links: 
+
+
+https://www.credencys.com/blog/how-to-get-started-with-master-data-management/
+
+https://profisee.com/master-data-management-what-why-how-who/#tab3
+
+https://www.bing.com/videos/search?q=master+data+management+steps&docid=608006085026518197&mid=07680DCE1598D336EC6607680DCE1598D336EC66&view=detail&FORM=VIRE
+
+https://medium.com/appanion/10-steps-towards-a-successful-master-data-management-project-1322e20d2241
+
+https://liliendahl.com/2019/05/26/six-mdm-ai-and-ml-use-cases/#:~:text=One%20of%20the%20hottest%20trends%20in%20the%20Master,Machine%20Learning%20%28ML%29.%20This%20aspiration%20is%20not%20new.
+
+https://www.mdmgeek.com/2012/01/27/identifying-the-right-sources-of-master-data/
+
+https://www.bmc.com/blogs/data-architecture/
+
+https://www.vertabelo.com/blog/entities-attributes-data-model/#:~:text=In%20your%20entity-relationship%20model%2C%20an%20entity%20is%20a,entities%20in%20a%20problem%20domain%20and%20represent%20them.
+
+https://www.geeksforgeeks.org/how-to-choose-the-right-database-for-your-application/
+
+https://www.predictiveanalyticstoday.com/master-data-management-software/
+
+https://rockset.com/blog/kafka-vs-kinesis-choosing-the-best-data-streaming-solution/
+
+https://solutionsreview.com/data-integration/the-best-data-streaming-platforms-and-tools/
+
+
+
+script to execute informatica workflow through linux
+
+
+touch OrgNameLibraryStage.log
+
+echo "IF check and OrgNameLibraryStage Table started: "$(date -u) >> /opt/infa/infa_shared/emdm/OrgNameLibraryStage.log
+
+sh /opt/infa/idq/server/bin/infacmd.sh wfs startWorkflow -dn DOM_HPE_ITG -sn DIS01_HPE_ITG -un Administrator -pd HPE-@dmin -a Application_wf_control_table -wf wf_control_table -w true
+
+echo "IF check and OrgNameLibraryStage Table ended: "$(date -u) >> /opt/infa/infa_shared/emdm/OrgNameLibraryStage.log
+
+sh /opt/infa/idq/server/bin/infacmd.sh wfs startWorkflow -dn DOM_HPE_ITG -sn DIS01_HPE_ITG -un Administrator -pd HPE-@dmin -a Application_wf_MDCP_PRELAND_DUNS_MATCH_LOAD -wf wf_MDCP_PRELAND_DUNS_MATCH_LOAD -w true
+
+if [ "$?" -eq 0 ]
+then
+  echo success
+  exitcode=0
+else
+  echo fail
+  exitcode=-1
+exit ${exitcode}
+fi
+
+
+#################################
+#!/bin/bash
+#This script check for entry in control table
+
+EAP_1=TEST
+while [ "$EAP_1" != "COMPLETED|COMPLETED|SUCCESS" ]
+do
+EAP_1=$(sqlcmd -U INFA_MDM_ETL -P '0H8#WrCn*j$4C' -S i2wg0511.americas.hpqcorp.net,1178 -Q "USE MDM_LAND ;set nocount on; DECLARE @STATUS NVARCHAR(500);SELECT @STATUS=CONCAT(ISNULL(IF_SNAP_CUSTOMER_STATUS,'COMPLETED'),'|',ISNULL(IF_SNAP_VENDOR_STATUS,'COMPLETED'))  from MDM_LAND.DBO.CONTROL_TABLE with (nolock) where RUN_ID = (SELECT MAX(RUN_ID) FROM MDM_LAND.DBO.CONTROL_TABLE with (nolock) WHERE STATUS='SUCCESS');SELECT @STATUS=@STATUS + '|' + STATUS FROM MDM_LAND.DBO.CONTROL_TABLE_EAP with (nolock) WHERE RUN_ID IN (SELECT MAX(RUN_ID) FROM MDM_LAND.DBO.CONTROL_TABLE_EAP with (nolock));SELECT @STATUS;")
+
+if [[ "$EAP_1" == *"COMPLETED|COMPLETED|SUCCESS"* ]]; then
+                break
+        fi
+        echo "sleeping now"
+        sleep 300
+done
